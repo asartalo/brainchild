@@ -43,4 +43,26 @@ class UserTest extends \PHPUnit_Framework_TestCase {
     $this->assertTrue($this->user->isControllable());
   }
   
+  function testRevokeControl() {
+    $this->user->takeControl('secret');
+    $this->user->revokeControl();
+    $this->assertFalse($this->user->isControllable());
+  }
+  
+  function testChangingEmail() {
+    $this->user->takeControl('secret');
+    $this->user->setEmail('john@new.example.com');
+    $this->assertEquals('john@new.example.com', $this->user->getEmail());
+  }
+  
+  function testChangingEmailDoesNothingWhenNotInControl() {
+    $this->user->setEmail('john@new.example.com');
+    $this->assertEquals('john@example.com', $this->user->getEmail());
+  }
+  
+  function testChangingPassword() {
+    $this->user->changePassword('secret', 'new secret');
+    $this->assertTrue($this->user->isPasswordMatch('new secret'));
+  }
+  
 }

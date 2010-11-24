@@ -2,52 +2,66 @@
 
 namespace Brainchild;
 
-class Manager {
+use
+  \Brainchild\Entities\User,
+  \Brainchild\Entities\NullUser;
 
-  const 
-    MESSAGES_WRONG_PASSWORD = 100,
-    MESSAGES_LOGIN_UNKNOWN_USER = 101;
+class Manager {
   
-  private $my_account, $users = array();
+  private 
+    $my_account,
+    $user_repo,
+    $project_manager;
   
-  function registerUser(Entities\User $user) {
-    if (!array_key_exists($user->getUsername(), $this->users)) {
-      $this->users[$user->getUsername()] = $user;
-      return true;
-    }
-    return false;
+  function __construct(
+    Repositories\UserRepository $user_repo,
+    ProjectManager $project_manager
+  ) {
+    $this->my_account = new NullUser; 
+    $this->user_repo = $user_repo;
+    $this->project_manager = $project_manager;
+  }
+  
+  function registerUser(array $user_options) {
+    return $this->user_repo->save(new User($user_options));
   }
   
   function getUser($username) {
-    if (array_key_exists($username, $this->users)) {
-      return $this->users[$username];
-    }
-    return false;
+    return $this->user_repo->findByName($username);
   }
   
   function login($username, $password) {
     $user = $this->getUser($username);
-    if (!$user) {
-      return $feedback = new Feedback(
-        "Did not find user.",
-        self::MESSAGES_LOGIN_UNKNOWN_USER
-      );
-    }
-    if ($user->isPasswordMatch($password)) {
-      $user->takeControl($password);
-    } else {
-      return $feedback = new Feedback(
-        "The password for {$username} is wrong.",
-        self::MESSAGES_WRONG_PASSWORD
-      );
-    }
+    $user->takeControl($password);
     if ($user->isControllable()) {
+      $feedback = new Feedback(
+        'You are now logged in. :)',
+        Feedback::USER_LOGIN_SUCCESS
+      );
       $this->my_account = $user;
+    } else {
+      $feedback = new Feedback(
+        'Unable to login. The user and/or the password you specified is wrong.',
+        Feedback::USER_LOGIN_FAILURE
+      );
     }
+    return $feedback;
+  }
+  
+  function logout() {
+    $this->my_account->revokeControl();
+    $this->my_account = new NullUser;
   }
   
   function getMyAccount() {
     return $this->my_account;
+  }
+  
+  function getMyProjectManager() {
+    if ($this->my_account->isControllable()) {
+      return $this->project_manager;
+    }
+    return new \Brainchild\NullProjectManager;
   }
   
 }

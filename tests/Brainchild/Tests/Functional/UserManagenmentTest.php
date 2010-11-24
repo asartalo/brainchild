@@ -9,6 +9,7 @@ use \Brainchild\Entities\User, \Brainchild\Manager;
 class UserManagementTest extends \PHPUnit_Framework_TestCase {
   
   function setUp() {
+    $this->markTestIncomplete();
     $this->user = new User(array(
       'username' => 'john',
       'password' => 'secret',

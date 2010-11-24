@@ -1,8 +1,11 @@
 <?php
 
 namespace Brainchild\Entities;
+use Doctrine\Common\Collections\ArrayCollection;
 
-/** @Entity */
+/** 
+ * @Entity(repositoryClass="Brainchild\Repositories\UserRepository")
+ */
 class User {
   
   /** @Column */
@@ -44,6 +47,20 @@ class User {
     if ($this->isPasswordMatch($password)) {
       $this->state_controllable = true;
     }
+  }
+  
+  function revokeControl() {
+    $this->state_controllable = false;
+  }
+  
+  function setEmail($email) {
+    if ($this->isControllable()) {
+      $this->email = $email;
+    }
+  }
+  
+  function changePassword($old_password, $new_password) {
+    $this->password = $new_password;
   }
   
 }
